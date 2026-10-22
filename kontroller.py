@@ -18,6 +18,11 @@ AGARE = "agare"
 STADA = "stada"
 OK = "ok"
 
+# Appar som skapas och sköts automatiskt i kundens egen tenant. De ska inte ha någon ägare,
+# så ägarvarningen vore bara brus. Nycklarna kontrolleras ändå.
+SYSTEMHANTERADE = {"P2P Server"}                        # fjärrinloggning på Entra-anslutna datorer
+SYSTEMHANTERADE_PREFIX = ("ConnectSyncProvisioning_",)  # Entra Connect Sync
+
 # En app vars sista nyckel gick ut för mer än så här länge sedan används troligen inte.
 DAGAR_INNAN_DOD = 90
 
@@ -167,14 +172,19 @@ def bedom(obj, nu):
 
     agarfynd = bedom_agare(obj, nu)
     if agarfynd:
-        fynd.append(agarfynd)
+        # Ägarvarningen visar redan den nyaste nyckeln, så raden under "I ordning" vore en dubblett.
+        fynd = [f for f in fynd if f.niva != OK] + [agarfynd]
     return fynd
+
+
+def systemhanterad(obj):
+    return obj.namn in SYSTEMHANTERADE or obj.namn.startswith(SYSTEMHANTERADE_PREFIX)
 
 
 def bedom_agare(obj, nu):
     """Varnar när ingen finns kvar som kan byta nyckeln. Utgångna appar syns redan på annat håll."""
     giltiga = [n for n in obj.nycklar if n.slut > nu]
-    if obj.agare is None or not giltiga:
+    if obj.agare is None or not giltiga or systemhanterad(obj):
         return None
     sista = max(giltiga, key=lambda n: n.slut)
 

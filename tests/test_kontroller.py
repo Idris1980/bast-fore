@@ -126,6 +126,23 @@ class Agarskap(unittest.TestCase):
         fynd = self.agarfynd([], hemlighet(om(9)), hemlighet(om(300)))
         self.assertEqual(fynd[0].dagar, 300)
 
+    def test_agarvarning_ersatter_i_ordning(self):
+        fynd = bedom(app(hemlighet(om(200)), agare=[]), NU)
+        self.assertEqual(nivaer(fynd), [AGARE])
+
+    def test_agarvarning_ersatter_inte_andra_varningar(self):
+        fynd = bedom(app(hemlighet(om(10)), hemlighet(om(200)), agare=[]), NU)
+        self.assertEqual(nivaer(fynd), [INOM_14, AGARE])
+
+    def test_systemhanterade_appar_far_ingen_agarvarning(self):
+        for namn in ("P2P Server", "ConnectSyncProvisioning_SRV-AD01_256851fc36df"):
+            obj = Objekt("App", namn, "app-id", [hemlighet(om(84))], "obj-id", [])
+            self.assertEqual(nivaer(bedom(obj, NU)), [OK])
+
+    def test_systemhanterade_appar_varnar_fortfarande_for_nycklar(self):
+        obj = Objekt("App", "P2P Server", "app-id", [hemlighet(om(10))], "obj-id", [])
+        self.assertEqual(nivaer(bedom(obj, NU)), [INOM_14])
+
 
 class Tidszon(unittest.TestCase):
     def tearDown(self):
