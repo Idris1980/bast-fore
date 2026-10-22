@@ -119,3 +119,14 @@ python -m unittest
 ```
 
 Testerna anropar aldrig Graph eller Azure och behöver ingen inloggning.
+
+### Testmiljö för kopplingarna
+
+`testmiljo.ps1` bygger en avstängd Logic App med en koppling inloggad med ditt konto, så att du kan se kopplingsdelen fungera mot riktig Azure. Ett steg sker i webbläsaren: Microsoft kräver att du själv loggar in kopplingen.
+
+```powershell
+az login
+.\testmiljo.ps1
+python bast_fore.py
+.\testmiljo.ps1 -Riv
+```

@@ -79,6 +79,12 @@ class Kopplingar(unittest.TestCase):
         text = self.skriv([])
         self.assertNotIn("LOGIC APPS-KOPPLINGAR", text)
         self.assertIn("0 kopplingar i Logic Apps kontrollerade.", text)
+        self.assertIn("1 app med nycklar kontrollerade.", text)
+
+    def test_en_koppling_i_ental(self):
+        text = self.skriv([kfynd(kp.OK, "blob")])
+        self.assertIn("🟢 1 koppling loggar inte in som en person.", text)
+        self.assertIn("1 koppling i Logic Apps kontrollerade.", text)
 
     def test_html(self):
         with tempfile.TemporaryDirectory() as mapp:
@@ -88,7 +94,7 @@ class Kopplingar(unittest.TestCase):
                 text = f.read()
         self.assertIn("Logic Apps-kopplingar", text)
         self.assertIn("&lt;b&gt;", text)
-        self.assertIn("1 kopplingar kontrollerade", text)
+        self.assertIn("1 koppling kontrollerad", text)
 
 
 class Html(unittest.TestCase):

@@ -215,7 +215,7 @@ class Samla(unittest.TestCase):
         arm = FalskArm(PRENUMERATIONER[:1], [k, kopplingsresurs("s1", "b")], fel={k["id"]: 404})
         kopplingar, anteckningar = samla_kopplingar(arm, FalskGraph([]))
         self.assertEqual([k.namn for k in kopplingar], ["b"])
-        self.assertEqual(anteckningar, ["Kunde inte läsa 1 kopplingar."])
+        self.assertEqual(anteckningar, ["Kunde inte läsa 1 koppling."])
 
     def test_logic_app_som_inte_gar_att_lasa_ger_okand_anvandning(self):
         la = logic_app("s1", "la", "x")

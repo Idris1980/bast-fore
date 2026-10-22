@@ -117,7 +117,7 @@ def samla_kopplingar(arm, graph):
             logic_apps_lasta = False
 
     if misslyckade:
-        anteckningar.append(f"Kunde inte läsa {misslyckade} kopplingar.")
+        anteckningar.append(f"Kunde inte läsa {misslyckade} {'koppling' if misslyckade == 1 else 'kopplingar'}.")
     if not logic_apps_lasta:
         anteckningar.append("Kunde inte läsa alla Logic Apps, så det saknas uppgift om var vissa kopplingar används.")
     for k in kopplingar:

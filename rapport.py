@@ -60,6 +60,10 @@ def anvandning(k):
     return "Används av " + ", ".join(k.anvands_av) + "."
 
 
+def antal(n, en, flera):
+    return f"{n} {en if n == 1 else flera}"
+
+
 def antal_ok(kfynd):
     return sum(1 for f in kfynd if f.niva == kp.OK)
 
@@ -94,11 +98,11 @@ def skriv_terminal(fynd, antal_objekt, organisation, anteckningar=(), kfynd=None
                         print(f"      {extra}")
             print()
         if antal_ok(kfynd):
-            print(f"🟢 {antal_ok(kfynd)} kopplingar loggar inte in som en person.\n")
+            print(f"🟢 {antal(antal_ok(kfynd), 'koppling loggar', 'kopplingar loggar')} inte in som en person.\n")
 
-    print(f"{antal_objekt} appar med nycklar kontrollerade.")
+    print(f"{antal(antal_objekt, 'app', 'appar')} med nycklar kontrollerade.")
     if kfynd is not None:
-        print(f"{len(kfynd)} kopplingar i Logic Apps kontrollerade.")
+        print(f"{antal(len(kfynd), 'koppling', 'kopplingar')} i Logic Apps kontrollerade.")
     for a in anteckningar:
         print(a)
     print()
@@ -141,11 +145,11 @@ def skriv_html(fynd, antal_objekt, organisation, sokvag, anteckningar=(), kfynd=
             )
             innehall += html_grupp(ikon, rubrik, niva, rader, len(i_gruppen))
         if antal_ok(kfynd):
-            innehall += f"<p>🟢 {antal_ok(kfynd)} kopplingar loggar inte in som en person.</p>"
+            innehall += f"<p>🟢 {antal(antal_ok(kfynd), 'koppling loggar', 'kopplingar loggar')} inte in som en person.</p>"
 
     innehall += "".join(f'<p class="under">{e(a)}</p>' for a in anteckningar)
     vecka = datetime.now().isocalendar().week
-    kopplingstext = f" · {len(kfynd)} kopplingar kontrollerade" if kfynd is not None else ""
+    kopplingstext = f" · {antal(len(kfynd), 'koppling kontrollerad', 'kopplingar kontrollerade')}" if kfynd is not None else ""
 
     with open(sokvag, "w", encoding="utf-8") as fil:
         fil.write(f"""<!doctype html>
@@ -169,7 +173,7 @@ small {{ color:var(--svag); }}
 .ok {{ color:var(--svag); }} .ok b {{ font-weight:600; }}
 </style></head><body><main>
 <h1>Bäst före – {e(organisation or 'okänd organisation')}</h1>
-<p class="under">Vecka {vecka} · {antal_objekt} appar med nycklar kontrollerade{kopplingstext} · {datetime.now():%Y-%m-%d %H:%M}</p>
+<p class="under">Vecka {vecka} · {antal(antal_objekt, 'app', 'appar')} med nycklar kontrollerade{kopplingstext} · {datetime.now():%Y-%m-%d %H:%M}</p>
 {innehall}
 </main></body></html>
 """)
