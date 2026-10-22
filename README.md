@@ -119,12 +119,3 @@ python -m unittest
 ```
 
 Testerna anropar aldrig Graph eller Azure och behöver ingen inloggning.
-
-## Nästa etapper
-
-1. ~~Nycklar och certifikat i appregistreringar~~
-2. ~~Ägare: vem som äger appen och om personen finns kvar~~
-3. ~~Logic Apps-kopplingar inloggade med personliga konton~~ (Logic Apps Standard återstår)
-4. Certifikat i Key Vault och App Service
-5. Stöd för flera kunder: godkännandeflöde och utskick varje vecka
-6. Power Automate-flöden
