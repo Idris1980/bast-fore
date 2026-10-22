@@ -1,14 +1,15 @@
 # Bäst före
 
-Visar vilka appnycklar och certifikat i Microsoft Entra som snart går ut, innan de stoppar en integration.
+Visar vad i Microsoft Entra och Azure som snart slutar fungera, innan det stoppar en integration: appnycklar och certifikat som går ut, och kopplingar i Logic Apps som hänger på en persons konto.
 
-Verktyget läser bara. Det ser aldrig själva hemligheterna, bara namn och slutdatum.
+Verktyget läser bara. Det ser aldrig själva hemligheterna, bara namn, slutdatum och vem som är inloggad.
 
 ## Vad den hittar
 
 - **Appregistreringar** med hemligheter eller certifikat som går ut.
 - **Företagsappar** (service principals), till exempel SAML-inloggning med certifikat som går ut.
 - **Ägare som inte finns kvar**: appar som fortfarande fungerar men där ingen kommer att byta nyckeln.
+- **Kopplingar i Logic Apps** som är inloggade med en persons konto (se nedan).
 
 Resultatet delas in så här:
 
@@ -31,6 +32,23 @@ Microsofts egna appar räknas inte med.
 
 Kontrollen gör ett anrop per app. Hoppa över den med `--utan-agare` om det går för långsamt.
 
+### Kopplingar i Logic Apps
+
+När någon bygger en Logic App som skickar mejl eller läser från SharePoint loggar de ofta in kopplingen med sitt eget konto. Allt fungerar tills personen slutar. Då slutar flödet fungera, ofta utan att någon märker det.
+
+Verktyget går igenom alla Azure-prenumerationer du kan se, läser kopplingarna (`Microsoft.Web/connections`) och slår upp det inloggade kontot i Entra:
+
+| Grupp | Betyder |
+|---|---|
+| 🔴 Trasig koppling | Azure säger att kopplingen har fel. Felmeddelandet visas. |
+| 🟠 Kontot finns inte kvar | Kontot är inaktiverat eller finns inte i katalogen. Kopplingen slutar fungera när inloggningen behöver förnyas, om den inte redan har gjort det. |
+| 🟡 Inloggad som en person | Fungerar nu, men slutar fungera när personen slutar. Byt till ett tjänstekonto, eller managed identity där kopplingen stöder det. |
+| 🟢 | Kopplingar som inte loggar in som en person visas bara som en siffra. |
+
+För varje koppling står vilka Logic Apps som använder den. Det gäller Logic Apps i förbrukningsplanen (Consumption). Logic Apps Standard syns inte än. Ett konto som inte hittas kan också vara ett konto utanför organisationen, till exempel ett privat Microsoft-konto.
+
+Kopplingarna kräver läsbehörighet (Reader) i prenumerationerna. Saknas den, eller finns inga prenumerationer, står det sist i rapporten och resten körs som vanligt. Hoppa över delen med `--utan-kopplingar`.
+
 ## Kör
 
 Kräver Python 3.11 eller senare. Inga paket behöver installeras.
@@ -48,7 +66,7 @@ az login
 python bast_fore.py --html rapport.html
 ```
 
-Vanliga användare får som standard läsa appregistreringar, så administratörsrättigheter behövs oftast inte.
+Vanliga användare får som standard läsa appregistreringar, så administratörsrättigheter behövs oftast inte. För kopplingarna behöver du rollen Reader (eller mer) i prenumerationerna.
 
 ## Logga in som app
 
@@ -65,16 +83,20 @@ az ad sp create --id $appId
 az ad app permission add --id $appId --api $graph --api-permissions "$lasApp=Role" "$lasOrg=Role" "$lasAnv=Role"
 az ad app permission admin-consent --id $appId
 
+# Läsrätt i prenumerationen, för kopplingarna i Logic Apps. Upprepa för varje prenumeration.
+$prenumeration = az account show --query id -o tsv
+az role assignment create --assignee $appId --role Reader --scope "/subscriptions/$prenumeration"
+
 $env:BASTFORE_KLIENTHEMLIGHET = az ad app credential reset --id $appId --display-name "lokal test" --years 1 --query password -o tsv
 $tenant = az account show --query tenantId -o tsv
 python bast_fore.py --tenant $tenant --klient-id $appId
 ```
 
-`User.Read.All` behövs för att se om en ägare är inaktiverad. Utan den hittar verktyget fortfarande appar helt utan ägare.
+`User.Read.All` behövs för att se om en ägare är inaktiverad och för att slå upp kontona i kopplingarna. Utan den hittar verktyget fortfarande appar helt utan ägare, och kopplingar på personliga konton visas som 🟡.
 
 Det kan ta någon minut efter godkännandet innan behörigheterna gäller. Hemligheten gäller i ett år, och verktyget varnar när den närmar sig sitt slutdatum.
 
-Ta bort appen när du är klar:
+Ta bort appen när du är klar. Rolltilldelningen försvinner när appen tas bort.
 
 ```powershell
 az ad app delete --id $appId
@@ -83,8 +105,9 @@ az ad app delete --id $appId
 ## Filer
 
 - `bast_fore.py` – startpunkten
-- `graph.py` – inloggning och anrop mot Microsoft Graph
+- `graph.py` – inloggning och anrop mot Microsoft Graph och Azure Resource Manager
 - `kontroller.py` – samlar in appar och bedömer när de går sönder
+- `kopplingar.py` – samlar in kopplingar i Logic Apps och slår upp kontona i Entra
 - `rapport.py` – terminalutskrift och HTML-rapport
 - `demo.py` – påhittad tenant
 - `tests/` – tester
@@ -95,13 +118,13 @@ az ad app delete --id $appId
 python -m unittest
 ```
 
-Testerna anropar aldrig Graph och behöver ingen inloggning.
+Testerna anropar aldrig Graph eller Azure och behöver ingen inloggning.
 
 ## Nästa etapper
 
 1. ~~Nycklar och certifikat i appregistreringar~~
 2. ~~Ägare: vem som äger appen och om personen finns kvar~~
-3. Logic Apps-kopplingar inloggade med personliga konton
+3. ~~Logic Apps-kopplingar inloggade med personliga konton~~ (Logic Apps Standard återstår)
 4. Certifikat i Key Vault och App Service
 5. Stöd för flera kunder: godkännandeflöde och utskick varje vecka
 6. Power Automate-flöden

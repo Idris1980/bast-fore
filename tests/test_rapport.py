@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 
+import kopplingar as kp
 from kontroller import AGARE, OK, TRASIGT, Fynd, Nyckel, Objekt
 from rapport import nar, skriv_html, skriv_terminal
 
@@ -44,6 +45,50 @@ class Terminal(unittest.TestCase):
         self.assertIn("👤 INGEN ÄGARE KVAR", text)
         self.assertIn("okänd organisation", text)
         self.assertIn("Kunde inte läsa ägare", text)
+
+
+def kfynd(niva, namn="k", konto="", anvands_av=None, notering=""):
+    k = kp.Koppling("/id", namn, "SharePoint", "rg-lon", "Prod", konto, anvands_av=anvands_av)
+    return kp.KFynd(niva, k, notering)
+
+
+class Kopplingar(unittest.TestCase):
+    def skriv(self, kf):
+        ut = io.StringIO()
+        with contextlib.redirect_stdout(ut):
+            skriv_terminal([fynd(OK, 200)], 1, "Nordvik", [], kf)
+        return ut.getvalue()
+
+    def test_inte_kontrollerat_syns_inte(self):
+        self.assertNotIn("kopplingar", self.skriv(None))
+
+    def test_grupper_och_ok_som_siffra(self):
+        text = self.skriv([
+            kfynd(kp.SLUTAT, "sp", "pelle@x", ["la-lon"], "Kontot är inaktiverat."),
+            kfynd(kp.PERSONLIGT, "outlook", "erik@x", []),
+            kfynd(kp.OK, "blob"), kfynd(kp.OK, "sb"),
+        ])
+        self.assertIn('🟠 KONTOT FINNS INTE KVAR\n   Koppling "sp" (SharePoint) i rg-lon – inloggad som pelle@x', text)
+        self.assertIn("Används av la-lon.", text)
+        self.assertIn("Ingen Logic App (förbrukningsplan) använder den.", text)
+        self.assertIn("🟢 2 kopplingar loggar inte in som en person.", text)
+        self.assertNotIn('"blob"', text)
+        self.assertIn("4 kopplingar i Logic Apps kontrollerade.", text)
+
+    def test_noll_kopplingar_ger_bara_summeringen(self):
+        text = self.skriv([])
+        self.assertNotIn("LOGIC APPS-KOPPLINGAR", text)
+        self.assertIn("0 kopplingar i Logic Apps kontrollerade.", text)
+
+    def test_html(self):
+        with tempfile.TemporaryDirectory() as mapp:
+            sokvag = os.path.join(mapp, "r.html")
+            skriv_html([], 0, "", sokvag, [], [kfynd(kp.TRASIG, "<b>", "a@x", ["la"])])
+            with open(sokvag, encoding="utf-8") as f:
+                text = f.read()
+        self.assertIn("Logic Apps-kopplingar", text)
+        self.assertIn("&lt;b&gt;", text)
+        self.assertIn("1 kopplingar kontrollerade", text)
 
 
 class Html(unittest.TestCase):
