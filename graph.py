@@ -3,11 +3,16 @@
 import json
 import shutil
 import subprocess
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
 GRAPH = "https://graph.microsoft.com/v1.0"
+
+# Graph ber oss ibland vänta (429) eller är tillfälligt nere (503, 504). Då försöker vi igen.
+FORSOK = 5
+VANTA_IGEN = {429, 503, 504}
 
 
 class GraphFel(Exception):
@@ -47,17 +52,28 @@ def token_fran_app(tenant, klient_id, hemlighet):
         raise SystemExit("Inloggningen som app misslyckades:\n" + fel.read().decode(errors="replace"))
 
 
+def vantetid(retry_after, forsok):
+    """Sekunder att vänta: det Graph säger i Retry-After, annars 1, 2, 4, 8 ... högst 60."""
+    if retry_after and retry_after.strip().isdigit():
+        return min(int(retry_after), 60)
+    return min(2 ** forsok, 60)
+
+
 class Graph:
     def __init__(self, token):
         self.token = token
 
     def _get(self, url):
-        fraga = urllib.request.Request(url, headers={"Authorization": f"Bearer {self.token}"})
-        try:
-            with urllib.request.urlopen(fraga) as svar:
-                return json.load(svar)
-        except urllib.error.HTTPError as fel:
-            raise GraphFel(fel.code, fel.read().decode(errors="replace")) from None
+        for forsok in range(FORSOK):
+            fraga = urllib.request.Request(url, headers={"Authorization": f"Bearer {self.token}"})
+            try:
+                with urllib.request.urlopen(fraga) as svar:
+                    return json.load(svar)
+            except urllib.error.HTTPError as fel:
+                if fel.code in VANTA_IGEN and forsok < FORSOK - 1:
+                    time.sleep(vantetid(fel.headers.get("Retry-After"), forsok))
+                    continue
+                raise GraphFel(fel.code, fel.read().decode(errors="replace")) from None
 
     def hamta(self, sokvag):
         return self._get(GRAPH + sokvag)

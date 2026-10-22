@@ -3,12 +3,13 @@
 import html
 from datetime import datetime
 
-from kontroller import INOM_14, INOM_60, OK, STADA, TRASIGT
+from kontroller import AGARE, INOM_14, INOM_60, OK, STADA, TRASIGT
 
 GRUPPER = [
     (TRASIGT, "🔴", "TRASIGT NU"),
     (INOM_14, "🟠", "INOM 14 DAGAR"),
     (INOM_60, "🟡", "INOM 60 DAGAR"),
+    (AGARE, "👤", "INGEN ÄGARE KVAR"),
     (STADA, "⚪", "STÄDA BORT"),
     (OK, "🟢", "I ORDNING"),
 ]
@@ -23,7 +24,7 @@ def nar(f):
     if f.dagar < 0:
         return f"gick ut {datum} (för {-f.dagar} dagar sedan)"
     if f.dagar == 0:
-        return f"går ut {datum} (idag)"
+        return f"gick ut {datum} (idag)" if f.utgangen else f"går ut {datum} (idag)"
     return f"går ut {datum} (om {f.dagar} dagar)"
 
 
@@ -31,7 +32,7 @@ def rad(f):
     return f'{f.objekt.slag} "{f.objekt.namn}" – {f.nyckel.typ} "{f.nyckel.namn}" {nar(f)}'
 
 
-def skriv_terminal(fynd, antal_objekt, organisation):
+def skriv_terminal(fynd, antal_objekt, organisation, anteckningar=()):
     vecka = datetime.now().isocalendar().week
     print(f"\nBÄST FÖRE – {organisation or 'okänd organisation'}    vecka {vecka}\n")
     if bara_ok(fynd):
@@ -46,10 +47,13 @@ def skriv_terminal(fynd, antal_objekt, organisation):
             if f.notering:
                 print(f"      {f.notering}")
         print()
-    print(f"{antal_objekt} appar med nycklar kontrollerade.\n")
+    print(f"{antal_objekt} appar med nycklar kontrollerade.")
+    for a in anteckningar:
+        print(a)
+    print()
 
 
-def skriv_html(fynd, antal_objekt, organisation, sokvag):
+def skriv_html(fynd, antal_objekt, organisation, sokvag, anteckningar=()):
     e = html.escape
     delar = []
     for niva, ikon, rubrik in GRUPPER:
@@ -65,6 +69,7 @@ def skriv_html(fynd, antal_objekt, organisation, sokvag):
         delar.append(f'<section class="{niva}"><h2>{ikon} {rubrik} <span>{len(i_gruppen)}</span></h2>'
                      f"<table>{rader}</table></section>")
     innehall = ("<p>Inget går ut inom 60 dagar.</p>" if bara_ok(fynd) else "") + "".join(delar)
+    innehall += "".join(f'<p class="under">{e(a)}</p>' for a in anteckningar)
     vecka = datetime.now().isocalendar().week
 
     with open(sokvag, "w", encoding="utf-8") as fil:

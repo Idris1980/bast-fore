@@ -22,11 +22,15 @@ def main():
     p.add_argument("--html", metavar="FIL", help="skriv även rapporten som HTML")
     p.add_argument("--tenant", help="logga in som app i den här tenanten i stället för via az")
     p.add_argument("--klient-id", help="appens klient-ID (hemligheten läses från BASTFORE_KLIENTHEMLIGHET)")
+    p.add_argument("--utan-agare", action="store_true", help="hoppa över kontrollen av ägare (går fortare)")
     a = p.parse_args()
 
     if a.demo:
         from demo import demo_objekt
-        objekt, organisation = demo_objekt(), "Nordvik AB (demo)"
+        objekt, organisation, anteckningar = demo_objekt(), "Nordvik AB (demo)", []
+        if a.utan_agare:
+            for o in objekt:
+                o.agare = None
     else:
         if a.tenant and a.klient_id:
             hemlighet = os.environ.get("BASTFORE_KLIENTHEMLIGHET")
@@ -41,16 +45,16 @@ def main():
         except (GraphFel, IndexError, KeyError):
             organisation = ""
         try:
-            objekt = samla(graph)
+            objekt, anteckningar = samla(graph, med_agare=not a.utan_agare)
         except GraphFel as fel:
             if fel.status == 403:
                 raise SystemExit("Saknar behörighet att läsa appar (Application.Read.All).")
             raise SystemExit(str(fel))
 
     fynd = bedom_alla(objekt)
-    skriv_terminal(fynd, len(objekt), organisation)
+    skriv_terminal(fynd, len(objekt), organisation, anteckningar)
     if a.html:
-        skriv_html(fynd, len(objekt), organisation, a.html)
+        skriv_html(fynd, len(objekt), organisation, a.html, anteckningar)
         print(f"HTML-rapport: {os.path.abspath(a.html)}")
 
 
