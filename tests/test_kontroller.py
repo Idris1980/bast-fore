@@ -210,6 +210,14 @@ class Samla(unittest.TestCase):
         self.assertEqual([(o.slag, o.id) for o in objekt], [("App", "a1"), ("Företagsapp", "sp1")])
         self.assertEqual(anteckningar, [])
 
+    def test_hoppar_over_managed_identity(self):
+        graph = FalskGraph({"/servicePrincipals": [
+            nyckelpost("sp1", servicePrincipalType="Application"),
+            nyckelpost("arc", servicePrincipalType="ManagedIdentity"),
+        ]})
+        objekt, _ = samla(graph, med_agare=False, nu=NU)
+        self.assertEqual([o.id for o in objekt], ["sp1"])
+
     def test_lasar_agare_bara_for_appar_som_fungerar(self):
         graph = FalskGraph({
             "/applications": [nyckelpost("lever"), nyckelpost("dod", slut="2020-01-01T00:00:00Z")],

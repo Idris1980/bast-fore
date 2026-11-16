@@ -103,8 +103,11 @@ def samla(graph, med_agare=True, nu=None):
     for app in graph.lista("/applications?$select=id,displayName,appId,passwordCredentials,keyCredentials&$top=999"):
         objekt.append(fran_graph(app, "App"))
     for sp in graph.lista("/servicePrincipals?$select=id,displayName,appId,appOwnerOrganizationId,"
-                          "passwordCredentials,keyCredentials&$top=999"):
+                          "servicePrincipalType,passwordCredentials,keyCredentials&$top=999"):
         if sp.get("appOwnerOrganizationId") in MICROSOFT_TENANTER:
+            continue
+        # Azure byter själv certifikaten för managed identities, och de har aldrig någon ägare.
+        if sp.get("servicePrincipalType") == "ManagedIdentity":
             continue
         objekt.append(fran_graph(sp, "Företagsapp"))
     objekt = [o for o in objekt if o.nycklar]

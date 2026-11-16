@@ -24,7 +24,7 @@ Resultatet delas in så här:
 
 Har en app både en gammal och en ny nyckel varnar verktyget ändå för den gamla. Det är en vanlig fälla: någon skapade en ny nyckel men bytte aldrig i klienten.
 
-Microsofts egna appar räknas inte med.
+Microsofts egna appar räknas inte med. Det gör inte heller managed identities, eftersom Azure byter deras certifikat automatiskt.
 
 ### Ägare
 
