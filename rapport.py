@@ -121,7 +121,7 @@ def skriv_html(fynd, antal_objekt, organisation, sokvag, anteckningar=(), kfynd=
         if not i_gruppen:
             continue
         rader = "".join(
-            f"<tr><td>{e(f.objekt.slag)}</td><td><b>{e(f.objekt.namn)}</b><br><small>{e(f.objekt.app_id or '')}</small></td>"
+            f"<tr><td class=\"slag\">{e(f.objekt.slag)}</td><td><b>{e(f.objekt.namn)}</b><br><small>{e(f.objekt.app_id or '')}</small></td>"
             f"<td>{e(f.nyckel.typ)} \"{e(f.nyckel.namn)}\"</td><td>{e(nar(f))}"
             f"{'<br><small>' + e(f.notering) + '</small>' if f.notering else ''}</td></tr>"
             for f in i_gruppen
@@ -168,6 +168,7 @@ h1.del {{ font-size:20px; margin:48px 0 0; padding-top:24px; border-top:1px soli
 h2 {{ font-size:16px; margin:28px 0 8px; }} h2 span {{ color:var(--svag); font-weight:normal; }}
 table {{ width:100%; border-collapse:collapse; background:var(--kort); border:1px solid var(--linje); border-radius:8px; }}
 td {{ padding:10px 12px; border-top:1px solid var(--linje); vertical-align:top; overflow-wrap:anywhere; }}
+td.slag {{ white-space:nowrap; overflow-wrap:normal; }}
 tr:first-child td {{ border-top:none; }}
 small {{ color:var(--svag); }}
 .ok {{ color:var(--svag); }} .ok b {{ font-weight:600; }}
