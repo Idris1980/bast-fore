@@ -12,9 +12,9 @@ def demo_objekt():
     def om(dagar):
         return nu + timedelta(days=dagar)
 
-    anna = Agare("person", "Anna Berg", "anna.berg@nordvik.se", True)
-    erik = Agare("person", "Erik Lund", "erik.lund@nordvik.se", True)
-    pelle = Agare("person", "Pelle Holm", "pelle.holm@nordvik.se", False)
+    anna = Agare("person", "Anna Berg", "anna.berg@exempel.se", True)
+    erik = Agare("person", "Erik Lund", "erik.lund@exempel.se", True)
+    pelle = Agare("person", "Pelle Holm", "pelle.holm@exempel.se", False)
 
     return [
         Objekt("App", "Fakturaimport", "3f2a9c1e-0000-4000-8000-000000000001",
@@ -38,11 +38,11 @@ def demo_objekt():
 def demo_kopplingar():
     def koppling(namn, api, rg, konto="", person=None, status="Connected", fel="", anvands_av=()):
         return Koppling(f"/subscriptions/demo/resourceGroups/{rg}/providers/Microsoft.Web/connections/{namn}",
-                        namn, api, rg, "Nordvik produktion", konto, status, fel, list(anvands_av), person)
+                        namn, api, rg, "Exempelbolaget produktion", konto, status, fel, list(anvands_av), person)
 
-    pelle = Person("pelle.holm@nordvik.se", "Pelle Holm", True, False)
-    erik = Person("erik.lund@nordvik.se", "Erik Lund", True, True)
-    sara = Person("sara.ek@nordvik.se", finns=False)
+    pelle = Person("pelle.holm@exempel.se", "Pelle Holm", True, False)
+    erik = Person("erik.lund@exempel.se", "Erik Lund", True, True)
+    sara = Person("sara.ek@exempel.se", finns=False)
 
     return [
         koppling("teams-driftlarm", "Microsoft Teams", "rg-drift", sara.konto, sara, "Error",

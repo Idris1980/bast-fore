@@ -36,7 +36,7 @@ class Terminal(unittest.TestCase):
         return ut.getvalue()
 
     def test_bara_ok(self):
-        text = self.skriv([fynd(OK, 200)], 1, "Nordvik")
+        text = self.skriv([fynd(OK, 200)], 1, "Exempelbolaget")
         self.assertIn("Inget går ut inom 60 dagar.", text)
         self.assertIn("🟢 I ORDNING", text)
 
@@ -56,7 +56,7 @@ class Kopplingar(unittest.TestCase):
     def skriv(self, kf):
         ut = io.StringIO()
         with contextlib.redirect_stdout(ut):
-            skriv_terminal([fynd(OK, 200)], 1, "Nordvik", [], kf)
+            skriv_terminal([fynd(OK, 200)], 1, "Exempelbolaget", [], kf)
         return ut.getvalue()
 
     def test_inte_kontrollerat_syns_inte(self):

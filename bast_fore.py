@@ -30,7 +30,7 @@ def main():
     kopplingar = None
     if a.demo:
         from demo import demo_kopplingar, demo_objekt
-        objekt, organisation, anteckningar = demo_objekt(), "Nordvik AB (demo)", []
+        objekt, organisation, anteckningar = demo_objekt(), "Exempelbolaget AB (demo)", []
         if a.utan_agare:
             for o in objekt:
                 o.agare = None

@@ -18,14 +18,14 @@ class FranArm(unittest.TestCase):
         k = fran_arm({
             "id": KID, "name": "sharepoint",
             "properties": {
-                "displayName": "pelle@nordvik.se",
+                "displayName": "pelle@exempel.se",
                 "api": {"name": "sharepointonline", "displayName": "SharePoint"},
-                "authenticatedUser": {"name": "pelle@nordvik.se"},
+                "authenticatedUser": {"name": "pelle@exempel.se"},
                 "statuses": [{"status": "Connected"}],
             },
         }, "Prod")
         self.assertEqual((k.namn, k.api, k.resursgrupp, k.konto, k.status, k.fel),
-                         ("pelle@nordvik.se", "SharePoint", "rg-lon", "pelle@nordvik.se", "Connected", ""))
+                         ("pelle@exempel.se", "SharePoint", "rg-lon", "pelle@exempel.se", "Connected", ""))
 
     def test_fel_och_tom_anvandare(self):
         k = fran_arm({
@@ -159,7 +159,7 @@ PRENUMERATIONER = [{"subscriptionId": "s1", "displayName": "Prod"}, {"subscripti
 
 class Samla(unittest.TestCase):
     def test_hela_kedjan(self):
-        k1 = kopplingsresurs("s1", "outlook", "pelle@nordvik.se")
+        k1 = kopplingsresurs("s1", "outlook", "pelle@exempel.se")
         k2 = kopplingsresurs("s1", "blob")
         k3 = kopplingsresurs("s2", "gast", "kund@extern.se")
         arm = FalskArm(PRENUMERATIONER, [
@@ -169,8 +169,8 @@ class Samla(unittest.TestCase):
             logic_app("s1", "la-lon", k1["id"]),
         ])
         graph = FalskGraph([
-            {"userPrincipalName": "pelle@nordvik.se", "displayName": "Pelle", "accountEnabled": False},
-            {"userPrincipalName": "kund_extern.se#EXT#@nordvik.onmicrosoft.com", "mail": "kund@extern.se",
+            {"userPrincipalName": "pelle@exempel.se", "displayName": "Pelle", "accountEnabled": False},
+            {"userPrincipalName": "kund_extern.se#EXT#@exempelbolaget.onmicrosoft.com", "mail": "kund@extern.se",
              "displayName": "Kund", "accountEnabled": True},
         ])
         kopplingar, anteckningar = samla_kopplingar(arm, graph)
@@ -178,7 +178,7 @@ class Samla(unittest.TestCase):
         per_namn = {k.namn: k for k in kopplingar}
 
         self.assertEqual(per_namn["outlook"].anvands_av, ["la-faktura", "la-lon"])
-        self.assertEqual(per_namn["outlook"].person, Person("pelle@nordvik.se", "Pelle", True, False))
+        self.assertEqual(per_namn["outlook"].person, Person("pelle@exempel.se", "Pelle", True, False))
         self.assertEqual(per_namn["outlook"].prenumeration, "Prod")
         self.assertEqual(per_namn["blob"].anvands_av, ["la-faktura"])
         self.assertIsNone(per_namn["blob"].person)
